@@ -13,6 +13,7 @@ plan pour le fichier:
 
 # étape 1: importer les bonnes bibliotèques
 import pandas as pd
+import torch
 import csv 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,3 +41,6 @@ df_IP = pd.DataFrame(IP_list).T
 # étape 4: créer un nouveau fichier pour accueillir les données extraites
 # encore une fois ça ne vas pas fct mais c'est pour le plan
 df_IP.to_csv('extracted_IP_data.csv')
+
+# 400ms au début ou on commence les mesures 
+# au milieu des fenêtres de mesures de 80ms
