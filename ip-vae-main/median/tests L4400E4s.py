@@ -85,13 +85,13 @@ plt.title("Histogramme L4400E_4s")
 plt.xlabel("Median difference (mV/V)")
 plt.ylabel("Frequency")
 plt.show()
-print(f"Mean difference: {stats.median(diff)}")
+print(f"Median difference: {stats.median(diff)}")
 
 diff2 = []
 for i in range(len(ip_data)):
     xp2 = [model.forward(ip_data[i])[0] for _ in range(100)]
     xp2 = torch.stack(xp2)
-    xp2_avg = torch.median(xp2, dim=0)
+    xp2_avg = torch.median(xp2, dim=0).values
     diff2.append((ip_data[i].detach().numpy() - xp2_avg.detach().numpy()))
 diff2 = np.array(diff2)
 diff2_avg = np.median(diff2, axis=0)
@@ -107,7 +107,7 @@ diff4 = []
 for i in range(len(ip_data)):
     xp4 = [model.forward(ip_data[i])[0] for _ in range(100)]
     xp4 = torch.stack(xp4)
-    xp4_avg = torch.median(xp4, dim=0)
+    xp4_avg = torch.median(xp4, dim=0).values
     diff4.append(100 * (ip_data[i].detach().numpy() - xp4_avg.detach().numpy()) / ip_data[i].detach().numpy())
 diff4 = np.array(diff4)
 diff4_avg = np.median(diff4, axis=0)
