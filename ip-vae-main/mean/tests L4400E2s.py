@@ -23,9 +23,10 @@ df = pd.read_csv('L4400E_2s.csv')
 columns = [f"IP[{i}]" for i in range(20)]  # récupérer les donneés et les mettre dans une liste
 data = df[columns].values # Limiter le nombre de training data, sinon le calcul sera trop long
 ip_data = torch.from_numpy(data).float()
-"""x = model.decode(torch.randn(zdim))
-# Add synthetic noise to it
-xn = x + 4*(torch.rand(20) - 0.5)"""
+courant = df["I"].values
+courant_data = torch.from_numpy(courant).float()
+voltage = df["Vp"].values
+voltage_data = torch.from_numpy(voltage).float()
 
 # Denoise decay with a forward pass
 # test= np.random.randint(0, len(ip_data))  # Randomly select a test index
@@ -38,14 +39,11 @@ xp = output[0]
 t = np.arange(0.4+0.04, 2, 0.08)  # the IRIS ELREC Pro windows
 plt.figure()
 plt.plot(t, ip_data[test].detach().numpy(), '--k', label="Ground truth")
-#plt.plot(t, xn.detach().numpy(), '.k', label="Noisy input")
 plt.plot(t, xp.detach().numpy(), '-C3', label="Denoised")
 plt.legend()
 plt.ylabel("Chargeability (mV/V)")
 plt.xlabel("$t$ (s)")
 plt.title("comparison L4400E_2s")
-# plt.ylim([6, 29])
-# plt.savefig("./figures/example-1.png", dpi=144, bbox_inches="tight")
 
 # Plot comparison
 xp = [model.forward(ip_data[test])[0] for _ in range(100)]
@@ -56,7 +54,6 @@ xp_std = torch.std(xp, dim=0)
 
 plt.figure()
 plt.plot(t, ip_data[test].detach().numpy(), '--k', label="Ground truth")
-# plt.plot(t, xn.detach().numpy(), '.k', label="Noisy input")
 plt.plot(t, xp_avg.detach().numpy(), '-C3', label="Denoised")
 plt.fill_between(t,
                  (xp_avg-2*xp_std).detach().numpy(),
@@ -66,56 +63,62 @@ plt.legend()
 plt.ylabel("Chargeability (mV/V)")
 plt.xlabel("$t$ (s)")
 plt.title("Statistiques L4400E_2s")
-# plt.ylim([6, 29])
-# plt.savefig("./figures/example-2.png", dpi=144, bbox_inches="tight")
-
-# %timeit model.forward(xn)
 
 
 diff = []
+diff2 = []
+diff4 = []
 for i in range(len(ip_data)):
     xp3 = [model.forward(ip_data[i])[0] for _ in range(100)]
     xp3 = torch.stack(xp3)
     xp3_avg = torch.mean(xp3, dim=0)
     diff.append((xp3_avg.detach().numpy() - ip_data[i].detach().numpy()).mean())
+    diff2.append((ip_data[i].detach().numpy() - xp3_avg.detach().numpy()))
+    diff4.append(100 * (ip_data[i].detach().numpy() - xp3_avg.detach().numpy()) / ip_data[i].detach().numpy())
+diff2 = np.array(diff2)
+diff2_avg = np.mean(diff2, axis=0)
+diff4 = np.array(diff4)
+diff4_avg = np.mean(diff4, axis=0)
+
 plt.figure()
 plt.hist(diff, bins=50)
-plt.plot(stats.mean(diff), 0, 'ro', label="Overall mean difference")
+plt.plot(stats.mean(diff), 0, 'ro', label="Mean difference")
 plt.legend()
+plt.title("Histogramme L4400E_2s")
 plt.xlabel("Mean difference (mV/V)")
 plt.ylabel("Frequency")
-plt.title("Histogramme L4400E_2s")
 plt.show()
 print(f"Mean difference: {stats.mean(diff)}")
 
-diff2 = []
-for i in range(len(ip_data)):
-    xp2 = [model.forward(ip_data[i])[0] for _ in range(100)]
-    xp2 = torch.stack(xp2)
-    xp2_avg = torch.mean(xp2, dim=0)
-    diff2.append((ip_data[i].detach().numpy() - xp2_avg.detach().numpy()))
-diff2 = np.array(diff2)
-diff2_avg = np.mean(diff2, axis=0)
 plt.figure()
-plt.plot(t, diff2_avg, 'ro')
+plt.plot(t, diff2_avg, 'ro', label="Mean difference")
 plt.legend()
 plt.xlabel("$t$ (s)")
 plt.ylabel("Biais (mV/V)")
 plt.title("Biais L4400E_2s")
 plt.show()
 
-diff4 = []
-for i in range(len(ip_data)):
-    xp4 = [model.forward(ip_data[i])[0] for _ in range(100)]
-    xp4 = torch.stack(xp4)
-    xp4_avg = torch.mean(xp4, dim=0)
-    diff4.append(100 * (ip_data[i].detach().numpy() - xp4_avg.detach().numpy()) / ip_data[i].detach().numpy())
-diff4 = np.array(diff4)
-diff4_avg = np.mean(diff4, axis=0)
 plt.figure()
-plt.plot(t, diff4_avg, 'bo')
+plt.plot(t, diff4_avg, 'ro', label="Mean difference")
 plt.legend()
 plt.xlabel("$t$ (s)")
 plt.ylabel("Biais (%)")
 plt.title("Biais (%) L4400E_2s")
+plt.show()
+
+plt.figure()
+plt.plot(courant_data, diff, 'ro')
+plt.legend()
+plt.xticks(list(plt.xticks()[0]) + np.arange(4, 7.5, 0.5).tolist())
+plt.title("Biais selon courant L4400E_2s")
+plt.xlabel("Courant (A)")
+plt.ylabel("Biais (mV/V)")
+plt.show()
+
+plt.figure()
+plt.semilogx(voltage_data, diff, 'ro')
+plt.legend()
+plt.title("Biais selon voltage L4400E_2s")
+plt.xlabel("Voltage (V)")
+plt.ylabel("Biais (mV/V)")
 plt.show()
