@@ -29,22 +29,13 @@ voltage = df["Vp"].values
 voltage_data = torch.from_numpy(voltage).float()
 
 # Denoise decay with a forward pass
-test= 541 # Randomly select a test index
+test= 169 # Randomly select a test index
 print(f"Testing on index: {test}")
 output = model.forward(ip_data[test])
 xp = output[0]  
 
 # Plot comparison
 t = np.arange(0.48+0.08, 3.68, 0.160)  # the IRIS ELREC Pro windows
-plt.figure()
-plt.plot(t, ip_data[test].detach().numpy(), '--k', label="Ground truth")
-plt.plot(t, xp.detach().numpy(), '-C3', label="Denoised")
-plt.legend()
-plt.ylabel("Chargeability (mV/V)")
-plt.xlabel("$t$ (s)")
-plt.title("comparison L4400E_4s")
-
-# Plot comparison
 xp = [model.forward(ip_data[test])[0] for _ in range(100)]
 xp = torch.stack(xp)
 # Compute statistics
@@ -59,9 +50,10 @@ plt.fill_between(t,
                  (xp_avg+2*xp_std).detach().numpy(),
                  color='C3', alpha=0.2, label=r"$2\sigma$")
 plt.legend()
+plt.yticks(np.arange(0, 21, 2).tolist())
 plt.ylabel("Chargeability (mV/V)")
 plt.xlabel("$t$ (s)")
-plt.title("Statistiques L4400E_4s")
+plt.title("Démonstration L4400E_4s")
 
 diff = []
 diff2 = []
@@ -71,8 +63,8 @@ for i in range(len(ip_data)):
     xp3 = torch.stack(xp3)
     xp3_avg = torch.mean(xp3, dim=0)
     diff.append((xp3_avg.detach().numpy() - ip_data[i].detach().numpy()).mean())
-    diff2.append((ip_data[i].detach().numpy() - xp3_avg.detach().numpy()))
-    diff4.append(100 * (ip_data[i].detach().numpy() - xp3_avg.detach().numpy()) / ip_data[i].detach().numpy())
+    diff2.append((xp3_avg.detach().numpy() - ip_data[i].detach().numpy()))
+    diff4.append(100 * (xp3_avg.detach().numpy() - ip_data[i].detach().numpy()) / xp3_avg.detach().numpy())
 diff2 = np.array(diff2)
 diff2_avg = np.mean(diff2, axis=0)
 diff4 = np.array(diff4)
@@ -80,8 +72,10 @@ diff4_avg = np.mean(diff4, axis=0)
 
 plt.figure()
 plt.hist(diff, bins=50)
-plt.plot(stats.mean(diff), 0, 'ro', label="Mean difference")
+plt.plot(stats.mean(diff), 0, 'C3o', label="Mean difference")
 plt.legend()
+plt.xticks(np.arange(-1, 1.5, 0.25).tolist())
+plt.yticks(np.arange(0, 121, 20).tolist())
 plt.title("Histogramme L4400E_4s")
 plt.xlabel("Mean difference (mV/V)")
 plt.ylabel("Frequency")
@@ -89,32 +83,25 @@ plt.show()
 print(f"Mean difference: {stats.mean(diff)}")
 
 plt.figure()
-plt.plot(t, diff2_avg, 'ro', label="Mean difference")
+plt.plot(t, diff2_avg, 'C3o', label="Mean difference")
 plt.legend()
+plt.yticks(np.arange(0, 0.8, 0.1).tolist())
 plt.xlabel("$t$ (s)")
 plt.ylabel("Biais (mV/V)")
 plt.title("Biais L4400E_4s")
 plt.show()
 
-plt.figure()
-plt.plot(t, diff4_avg, 'ro', label="Mean difference")
-plt.legend()
-plt.xlabel("$t$ (s)")
-plt.ylabel("Biais (%)")
-plt.title("Biais (%) L4400E_4s")
-plt.show()
-
-plt.plot(courant_data, diff, 'ro')
-plt.legend()
+plt.plot(courant_data, diff, 'C3o')
 plt.xticks(np.arange(0, 7.5, 0.5).tolist())
+plt.yticks(np.arange(-1, 1.5, 0.25).tolist())
 plt.title("Biais selon courant L4400E_4s")
 plt.xlabel("Courant (A)")
 plt.ylabel("Biais (mV/V)")
 plt.show()
 
 plt.figure()
-plt.semilogx(voltage_data, diff, 'ro')
-plt.legend()
+plt.semilogx(voltage_data, diff, 'C3o')
+plt.yticks(np.arange(-1, 1.5, 0.25).tolist())
 plt.title("Biais selon voltage L4400E_4s")
 plt.xlabel("Voltage (V)")
 plt.ylabel("Biais (mV/V)")
