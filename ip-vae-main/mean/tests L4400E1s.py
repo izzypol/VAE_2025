@@ -1,8 +1,8 @@
-# @Author: cberube
-# @Date:   2021-07-26 17:07:38
-# @Email:  charles.berube@polymtl.ca
-# @Last modified by:   cberube
-# @Last modified time: 2021-07-26 17:07:31
+# @Author: cberube et izzypol
+# @Date:   2025-07-07
+# @Email:  charles.berube@polymtl.ca, isabelle.poliquin@etud.polymtl.ca
+# @Last modified by:   izzypol
+# @Last modified time: 2025-07-07 
 
 
 import torch
@@ -20,8 +20,8 @@ model.load_weights()
 
 # import data
 df = pd.read_csv('L4400E_1s.csv')
-columns = [f"IP[{i}]" for i in range(20)]  # récupérer les donneés et les mettre dans une liste
-data = df[columns].values # Limiter le nombre de training data, sinon le calcul sera trop long
+columns = [f"IP[{i}]" for i in range(20)]  # retrieve the data and put it in a list
+data = df[columns].values # limit the number of training data, otherwise the calculation will be too long
 ip_data = torch.from_numpy(data).float()
 courant = df["I"].values
 courant_data = torch.from_numpy(courant).float()
@@ -55,6 +55,7 @@ plt.ylabel("Chargeability (mV/V)")
 plt.xlabel("$t$ (s)")
 plt.title("Démonstration L4400E_1s")
 
+# do the calculations for the different comparisons that will be done
 diff = []
 diff2 = []
 diff4 = []
@@ -70,6 +71,7 @@ diff2_avg = np.mean(diff2, axis=0)
 diff4 = np.array(diff4)
 diff4_avg = np.mean(diff4, axis=0)
 
+# create the different graphs
 plt.figure()
 plt.hist(diff, bins=50)
 plt.plot(stats.mean(diff), 0, 'C3o', label="Mean difference")
@@ -103,7 +105,7 @@ plt.show()
 plt.figure()
 plt.semilogx(voltage_data, diff, 'C3o')
 plt.yticks(np.arange(-1, 1.5, 0.25).tolist())
-plt.title("Biais selon voltage L4400E_1s")
-plt.xlabel("Voltage (V)")
-plt.ylabel("Biais (mV/V)")
+plt.title("Biais selon Vp L4400E_1s")
+plt.xlabel("Vp (V)")
+plt.ylabel("Biais (V)")
 plt.show()
