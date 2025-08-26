@@ -11,7 +11,7 @@ Ce projet est basé sur le même algorithme mentionné précédemment. Les modif
 
 $$ écart (mV/V) = {D - B} $$
 
-$$ écart (mV/V) = {D - B \over D} {* 100\%} $$
+$$ écart (mV/V) = {(D - B)*100 \over D}$$
 
 où: 
 - D: Données débruitées
